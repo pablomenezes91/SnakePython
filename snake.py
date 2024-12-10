@@ -1,12 +1,25 @@
 import curses
 import time 
+import random
 
 def draw_screen(window):
     window.clear()
     window.border(0)
 
-def draw_actor(actor, window):
-    window.addch(actor[0], actor[1], curses.ACS_DIAMOND)
+def draw_actor(actor, window,char):
+    window.addch(actor[0], actor[1], char)
+
+def draw_snake(snake,window):
+    head = snake[0]
+    body = snake[1:]
+    draw_actor(head,window,char="@")
+
+    for body_part in body:
+        draw_actor(body_part,window,char="s")
+
+def get_new_fruit(window):
+    height, width = window.getmaxyx()
+    return [random.randint(1, height-2),random.randint(1, width-2)]
 
 def get_new_direction(window, timeout=1000):
     window.timeout(timeout)
@@ -28,6 +41,12 @@ def move_actor(actor, direction):
         case _:
             pass
 
+def move_snake(snake, direction):
+    head = snake[0].copy()
+    snake.insert(0, head)
+    move_actor(head, direction)
+    snake.pop()
+
 def actor_hit_border(actor,window):
     height, width = window.getmaxyx()
     if (actor[0] <= 0) or (actor[0] >= height-1):
@@ -36,25 +55,36 @@ def actor_hit_border(actor,window):
         return True
     return False
 
+def snake_hit_border(snake, window):
+    head = snake[0]
+    return actor_hit_border(head,window)
+
+def snake_hit_fruit(snake,fruit):
+    return fruit in snake
+
 def game_loop(window):
     # Setup Inicial
     curses.curs_set(0)
-    personagem = [10, 15]
+    snake = [[10, 15],[9, 15],[8, 15],[7, 15]]
+    fruit = get_new_fruit(window)
     current_direction = curses.KEY_DOWN
     
     while True:
         draw_screen(window)
-        draw_actor(personagem, window)
-
+        draw_snake(snake, window)
+        draw_actor(fruit,window,curses.ACS_DIAMOND)
         direction = get_new_direction(window,timeout=1000)
 
         if direction is  None:
             direction = current_direction
 
-        move_actor(personagem, direction)
+        move_snake(snake, direction)
         
-        if actor_hit_border(personagem,window):
+        if snake_hit_border(snake,window):
             return
+        
+        if snake_hit_fruit(snake,fruit):
+            fruit = get_new_fruit(window)
         
         current_direction = direction
 
