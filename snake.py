@@ -95,6 +95,7 @@ def select_difficulty():
         '3': 150,
         '4': 90,
         '5': 35,
+        '6':2000,
     }
     while True:
         answer = input('Selecione a dificuldade de 1 a 5: ')
@@ -117,6 +118,7 @@ def game_loop(window,game_speed):
         draw_screen(window)
         draw_snake(snake, window)
         draw_actor(fruit,window,curses.ACS_DIAMOND)
+
         direction = get_new_direction(window,game_speed)
 
         if direction is  None:
@@ -137,6 +139,8 @@ def game_loop(window,game_speed):
             fruit = get_new_fruit(window)
             ate_fruit = True
             score += 1
+            if game_speed == 2000:
+                game_speed = int(game_speed * 0.10)
         else:
             ate_fruit = False
         
