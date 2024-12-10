@@ -79,19 +79,45 @@ def direction_is_opposite(direction,current_direction):
         case curses.KEY_RIGHT: 
             return current_direction == curses.KEY_LEFT
 
-def game_loop(window):
+def finish_game(score, window):
+    height, width = window.getmaxyx()
+    s = f'Você perdeu! Coletou {score} frutas!'
+    y = int(height/2)
+    x = int((width - len(s)) / 2)
+    window.addstr(y, x, s)
+    window.refresh()
+    time.sleep(10)
+
+def select_difficulty():
+    difficulty = {
+        '1': 1000,
+        '2': 500,
+        '3': 150,
+        '4': 90,
+        '5': 35,
+    }
+    while True:
+        answer = input('Selecione a dificuldade de 1 a 5: ')
+        game_speed = difficulty.get(answer)
+        if game_speed is not None:
+            return game_speed
+        print('Escolha a dificuldade de 1 a 5! \n')
+
+
+def game_loop(window,game_speed):
     # Setup Inicial
     curses.curs_set(0)
     snake = [[10, 15],[9, 15],[8, 15],[7, 15]]
     fruit = get_new_fruit(window)
     ate_fruit = False
     current_direction = curses.KEY_DOWN
+    score = 0
     
     while True:
         draw_screen(window)
         draw_snake(snake, window)
         draw_actor(fruit,window,curses.ACS_DIAMOND)
-        direction = get_new_direction(window,timeout=1000)
+        direction = get_new_direction(window,game_speed)
 
         if direction is  None:
             direction = current_direction
@@ -102,19 +128,21 @@ def game_loop(window):
         move_snake(snake, direction,ate_fruit)
         
         if snake_hit_border(snake,window):
-            return
+            break
         
         if snake_hit_itself(snake):
-            return
+            break
 
         if snake_hit_fruit(snake,fruit):
             fruit = get_new_fruit(window)
             ate_fruit = True
+            score += 1
         else:
             ate_fruit = False
         
         current_direction = direction
+    
+    finish_game(score,window)
 
 if __name__ == '__main__':
-    curses.wrapper(game_loop)
-    print('Perdeu!')
+    curses.wrapper(game_loop, game_speed=select_difficulty())
