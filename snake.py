@@ -41,11 +41,12 @@ def move_actor(actor, direction):
         case _:
             pass
 
-def move_snake(snake, direction):
+def move_snake(snake, direction,ate_fruit):
     head = snake[0].copy()
     snake.insert(0, head)
     move_actor(head, direction)
-    snake.pop()
+    if not ate_fruit:
+        snake.pop()
 
 def actor_hit_border(actor,window):
     height, width = window.getmaxyx()
@@ -62,11 +63,28 @@ def snake_hit_border(snake, window):
 def snake_hit_fruit(snake,fruit):
     return fruit in snake
 
+def snake_hit_itself(snake):
+    head = snake[0]
+    body = snake[1:]
+    return head in body
+
+def direction_is_opposite(direction,current_direction):
+    match direction:
+        case curses.KEY_UP: 
+            return current_direction == curses.KEY_DOWN
+        case curses.KEY_LEFT: 
+            return current_direction == curses.KEY_RIGHT
+        case curses.KEY_DOWN: 
+            return current_direction == curses.KEY_UP
+        case curses.KEY_RIGHT: 
+            return current_direction == curses.KEY_LEFT
+
 def game_loop(window):
     # Setup Inicial
     curses.curs_set(0)
     snake = [[10, 15],[9, 15],[8, 15],[7, 15]]
     fruit = get_new_fruit(window)
+    ate_fruit = False
     current_direction = curses.KEY_DOWN
     
     while True:
@@ -77,14 +95,23 @@ def game_loop(window):
 
         if direction is  None:
             direction = current_direction
+        
+        if direction_is_opposite(direction,current_direction):
+            direction = current_direction
 
-        move_snake(snake, direction)
+        move_snake(snake, direction,ate_fruit)
         
         if snake_hit_border(snake,window):
             return
         
+        if snake_hit_itself(snake):
+            return
+
         if snake_hit_fruit(snake,fruit):
             fruit = get_new_fruit(window)
+            ate_fruit = True
+        else:
+            ate_fruit = False
         
         current_direction = direction
 
